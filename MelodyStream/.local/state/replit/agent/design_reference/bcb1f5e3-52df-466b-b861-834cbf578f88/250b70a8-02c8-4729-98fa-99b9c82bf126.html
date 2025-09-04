@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Clone - Music Streaming</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                borderRadius: {
+                    lg: "var(--radius)",
+                    md: "calc(var(--radius) - 2px)",
+                    sm: "calc(var(--radius) - 4px)",
+                },
+                colors: {
+                    background: "var(--background)",
+                    foreground: "var(--foreground)",
+                    card: {
+                        DEFAULT: "var(--card)",
+                        foreground: "var(--card-foreground)",
+                    },
+                    primary: {
+                        DEFAULT: "var(--primary)",
+                        foreground: "var(--primary-foreground)",
+                    },
+                    secondary: {
+                        DEFAULT: "var(--secondary)",
+                        foreground: "var(--secondary-foreground)",
+                    },
+                    muted: {
+                        DEFAULT: "var(--muted)",
+                        foreground: "var(--muted-foreground)",
+                    },
+                    accent: {
+                        DEFAULT: "var(--accent)",
+                        foreground: "var(--accent-foreground)",
+                    },
+                    border: "var(--border)",
+                    input: "var(--input)",
+                    ring: "var(--ring)",
+                },
+                fontFamily: {
+                    sans: ["var(--font-sans)"],
+                }
+            },
+        }
+    };
+    </script>
+    <style>
+        :root {
+            --background: hsl(0 0% 7%);
+            --foreground: hsl(0 0% 100%);
+            --card: hsl(0 0% 9%);
+            --card-foreground: hsl(0 0% 100%);
+            --primary: hsl(141 75% 42%);
+            --primary-foreground: hsl(0 0% 0%);
+            --secondary: hsl(0 0% 16%);
+            --secondary-foreground: hsl(0 0% 70%);
+            --muted: hsl(0 0% 16%);
+            --muted-foreground: hsl(0 0% 70%);
+            --accent: hsl(141 75% 42%);
+            --accent-foreground: hsl(0 0% 0%);
+            --border: hsl(0 0% 16%);
+            --input: hsl(0 0% 16%);
+            --ring: hsl(141 75% 42%);
+            --radius: 8px;
+            --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background-color: var(--background);
+            color: var(--foreground);
+        }
+
+        .gradient-overlay {
+            background: linear-gradient(135deg, rgba(29, 185, 84, 0.1) 0%, rgba(0, 0, 0, 0.8) 100%);
+        }
+
+        .player-button {
+            transition: all 0.2s ease;
+        }
+
+        .player-button:hover {
+            transform: scale(1.05);
+        }
+
+        .album-card {
+            transition: all 0.3s ease;
+        }
+
+        .album-card:hover {
+            background-color: hsl(0 0% 12%);
+            transform: translateY(-2px);
+        }
+
+        .progress-bar {
+            appearance: none;
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .progress-bar::-webkit-slider-track {
+            background: hsl(0 0% 33%);
+            height: 4px;
+            border-radius: 2px;
+        }
+
+        .progress-bar::-webkit-slider-thumb {
+            appearance: none;
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            background: hsl(0 0% 100%);
+            cursor: pointer;
+            border: none;
+        }
+
+        .progress-bar::-moz-range-track {
+            background: hsl(0 0% 33%);
+            height: 4px;
+            border-radius: 2px;
+            border: none;
+        }
+
+        .progress-bar::-moz-range-thumb {
+            height: 12px;
+            width: 12px;
+            border-radius: 50%;
+            background: hsl(0 0% 100%);
+            cursor: pointer;
+            border: none;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+<body class="bg-background text-foreground overflow-hidden">
+    <!-- @COMPONENT: AuthModal [login/signup states] -->
+    <div id="authModal" class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 hidden">
+        <div class="bg-card p-8 rounded-lg w-full max-w-md mx-4">
+            <div class="text-center mb-6">
+                <i class="fab fa-spotify text-primary text-4xl mb-4"></i>
+                <h2 class="text-2xl font-bold" data-bind="authMode">Log in to Spotify</h2>
+            </div>
+            
+            <!-- Login Form -->
+            <form id="loginForm" class="space-y-4" data-implementation="Should validate and authenticate user">
+                <div>
+                    <label class="block text-sm font-medium mb-2">Email or username</label>
+                    <input type="text" class="w-full bg-input border border-border rounded-md px-3 py-2 focus:ring-2 focus:ring-ring focus:border-transparent" data-mock="true" placeholder="Email or username">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-2">Password</label>
+                    <input type="password" class="w-full bg-input border border-border rounded-md px-3 py-2 focus:ring-2 focus:ring-ring focus:border-transparent" data-mock="true" placeholder="Password">
+                </div>
+                <button type="submit" class="w-full bg-primary text-primary-foreground py-3 rounded-full font-semibold hover:bg-primary/90 transition-colors" data-event="click:handleLogin">
+                    Log In
+                </button>
+            </form>
+
+            <div class="text-center mt-6">
+                <p class="text-muted-foreground">Don't have an account? 
+                    <button class="text-primary hover:underline" data-event="click:switchToSignup">Sign up for Spotify</button>
+                </p>
+            </div>
+
+            <button class="absolute top-4 right-4 text-muted-foreground hover:text-foreground" data-event="click:closeModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: AuthModal -->
+
+    <div class="flex h-screen">
+        <!-- @COMPONENT: Sidebar [navigation and playlists] -->
+        <div class="sidebar bg-background w-60 border-r border-border flex flex-col">
+            <!-- Logo -->
+            <div class="p-6 border-b border-border">
+                <div class="flex items-center space-x-2">
+                    <i class="fab fa-spotify text-primary text-2xl"></i>
+                    <span class="text-xl font-bold">Spotify</span>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 p-2 rounded-md hover:bg-muted transition-colors">
+                            <i class="fas fa-home text-lg"></i>
+                            <span>Home</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 p-2 rounded-md hover:bg-muted transition-colors">
+                            <i class="fas fa-search text-lg"></i>
+                            <span>Search</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 p-2 rounded-md hover:bg-muted transition-colors">
+                            <i class="fas fa-list text-lg"></i>
+                            <span>Your Library</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Playlists Section -->
+                <div class="mt-8">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Playlists</h3>
+                        <button class="text-muted-foreground hover:text-foreground" data-event="click:createPlaylist" data-implementation="Should open playlist creation modal">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- @MAP: playlists.map(playlist => ( -->
+                    <ul class="space-y-1" data-mock="true">
+                        <li><a href="#" class="block p-2 text-muted-foreground hover:text-foreground truncate">Liked Songs</a></li>
+                        <li><a href="#" class="block p-2 text-muted-foreground hover:text-foreground truncate">My Playlist #1</a></li>
+                        <li><a href="#" class="block p-2 text-muted-foreground hover:text-foreground truncate">Discover Weekly</a></li>
+                        <li><a href="#" class="block p-2 text-muted-foreground hover:text-foreground truncate">Release Radar</a></li>
+                        <li><a href="#" class="block p-2 text-muted-foreground hover:text-foreground truncate">Chill Hits</a></li>
+                    </ul>
+                    <!-- @END_MAP )) -->
+                </div>
+            </nav>
+
+            <!-- User Profile -->
+            <div class="p-4 border-t border-border">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-muted rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-sm"></i>
+                    </div>
+                    <span class="text-sm font-medium" data-bind="user.name" data-mock="true">John Doe</span>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: Sidebar -->
+
+        <!-- @COMPONENT: MainContent [music dashboard and player] -->
+        <div class="flex-1 flex flex-col">
+            <!-- Header -->
+            <header class="bg-card p-4 border-b border-border">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <button class="md:hidden text-muted-foreground hover:text-foreground" data-event="click:toggleSidebar">
+                            <i class="fas fa-bars"></i>
+                        </button>
+                        <div class="hidden md:flex items-center space-x-2">
+                            <button class="p-2 rounded-full bg-muted text-muted-foreground hover:text-foreground">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+                            <button class="p-2 rounded-full bg-muted text-muted-foreground hover:text-foreground">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center space-x-4">
+                        <div class="relative hidden md:block">
+                            <input type="text" placeholder="Search for songs, artists, or albums" class="bg-input border border-border rounded-full px-4 py-2 pl-10 w-80 focus:ring-2 focus:ring-ring focus:border-transparent" data-mock="true">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground"></i>
+                        </div>
+                        <button class="bg-primary text-primary-foreground px-6 py-2 rounded-full font-semibold hover:bg-primary/90 transition-colors" data-event="click:showAuth">
+                            Log in
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content Area -->
+            <main class="flex-1 overflow-y-auto bg-gradient-to-b from-secondary/20 to-background">
+                <div class="p-6">
+                    <!-- Hero Section -->
+                    <section class="mb-8">
+                        <!-- A vibrant concert stage with colorful lighting and silhouettes of performers -->
+                        <div class="relative h-80 rounded-lg overflow-hidden gradient-overlay" style="background-image: url('https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=1200&h=600'); background-size: cover; background-position: center;">
+                            <div class="absolute inset-0 bg-black bg-opacity-40"></div>
+                            <div class="relative z-10 p-8 h-full flex flex-col justify-end">
+                                <h1 class="text-5xl font-bold mb-4">Good evening</h1>
+                                <p class="text-xl text-muted-foreground">Discover your new favorite songs</p>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Recently Played -->
+                    <section class="mb-8">
+                        <h2 class="text-2xl font-bold mb-6">Recently played</h2>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <!-- @MAP: recentlyPlayed.map(item => ( -->
+                            <div class="album-card bg-card p-4 rounded-lg cursor-pointer" data-mock="true" data-implementation="Should play selected album/playlist">
+                                <div class="flex items-center space-x-4">
+                                    <!-- Album artwork showcasing a modern pop music album cover -->
+                                    <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=120&h=120" alt="Album cover" class="w-12 h-12 rounded">
+                                    <div>
+                                        <h3 class="font-semibold">Liked Songs</h3>
+                                        <p class="text-sm text-muted-foreground">Playlist</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="album-card bg-card p-4 rounded-lg cursor-pointer" data-mock="true">
+                                <div class="flex items-center space-x-4">
+                                    <!-- Retro vinyl record collection displaying classic album covers -->
+                                    <img src="https://pixabay.com/get/ga46c961b0053f2cc359231fee1ad0d550b20cb959f5dac209682a2079052db32c2e030dfa2ab29cf7d51e7b3a2d4f80119d671db089b37903d63f4f9750f179d_1280.jpg" alt="Album cover" class="w-12 h-12 rounded">
+                                    <div>
+                                        <h3 class="font-semibold">Discover Weekly</h3>
+                                        <p class="text-sm text-muted-foreground">Made for you</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="album-card bg-card p-4 rounded-lg cursor-pointer" data-mock="true">
+                                <div class="flex items-center space-x-4">
+                                    <!-- Modern electronic music album cover with neon colors and geometric patterns -->
+                                    <img src="https://images.unsplash.com/photo-1514525253161-7a46d19cd819?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=120&h=120" alt="Album cover" class="w-12 h-12 rounded">
+                                    <div>
+                                        <h3 class="font-semibold">Release Radar</h3>
+                                        <p class="text-sm text-muted-foreground">Made for you</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- @END_MAP )) -->
+                        </div>
+                    </section>
+
+                    <!-- Made for You -->
+                    <section class="mb-8">
+                        <h2 class="text-2xl font-bold mb-6">Made for you</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                            <!-- @MAP: madeForYou.map(playlist => ( -->
+                            <div class="album-card bg-card p-4 rounded-lg cursor-pointer" data-mock="true">
+                                <!-- Acoustic guitar and music sheet on a wooden background -->
+                                <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&h=200" alt="Playlist cover" class="w-full aspect-square rounded mb-4">
+                                <h3 class="font-semibold mb-2 truncate">Daily Mix 1</h3>
+                                <p class="text-sm text-muted-foreground line-clamp-2">The Weeknd, Post Malone, Ed Sheeran and more</p>
+                            </div>
+                            <div class="album-card bg-card p-4 rounded-lg cursor-pointer" data-mock="true">
+                                <!-- Jazz musician playing saxophone in a dimly lit club -->
+                                <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&h=200" alt="Playlist cover" class="w-full aspect-square rounded mb-4">
+                                <h3 class="font-semibold mb-2 truncate">Daily Mix 2</h3>
+                                <p class="text-sm text-muted-foreground line-clamp-2">Billie Eilish, Ariana Grande, Dua Lipa and more</p>
+                            </div>
+                            <div class="album-card bg-card p-4 rounded-lg cursor-pointer" data-mock="true">
+                                <!-- Hip-hop studio with mixing board and headphones -->
+                                <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&h=200" alt="Playlist cover" class="w-full aspect-square rounded mb-4">
+                                <h3 class="font-semibold mb-2 truncate">Discover Weekly</h3>
+                                <p class="text-sm text-muted-foreground line-clamp-2">Your weekly mixtape of fresh music</p>
+                            </div>
+                            <div class="album-card bg-card p-4 rounded-lg cursor-pointer" data-mock="true">
+                                <!-- Rock concert with electric guitars and stage lights -->
+                                <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&h=200" alt="Playlist cover" class="w-full aspect-square rounded mb-4">
+                                <h3 class="font-semibold mb-2 truncate">Release Radar</h3>
+                                <p class="text-sm text-muted-foreground line-clamp-2">Catch all the latest music from artists you follow</p>
+                            </div>
+                            <div class="album-card bg-card p-4 rounded-lg cursor-pointer" data-mock="true">
+                                <!-- Classical orchestra performance in an elegant concert hall -->
+                                <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&h=200" alt="Playlist cover" class="w-full aspect-square rounded mb-4">
+                                <h3 class="font-semibold mb-2 truncate">Liked Songs</h3>
+                                <p class="text-sm text-muted-foreground line-clamp-2">All your favorite tracks in one place</p>
+                            </div>
+                            <div class="album-card bg-card p-4 rounded-lg cursor-pointer" data-mock="true">
+                                <!-- Electronic music festival with DJ and crowd -->
+                                <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&h=200" alt="Playlist cover" class="w-full aspect-square rounded mb-4">
+                                <h3 class="font-semibold mb-2 truncate">Chill Hits</h3>
+                                <p class="text-sm text-muted-foreground line-clamp-2">Kick back to the best new and recent chill hits</p>
+                            </div>
+                            <!-- @END_MAP )) -->
+                        </div>
+                    </section>
+
+                    <!-- Popular Artists -->
+                    <section class="mb-8">
+                        <h2 class="text-2xl font-bold mb-6">Popular artists</h2>
+                        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+                            <!-- @MAP: popularArtists.map(artist => ( -->
+                            <div class="album-card bg-card p-4 rounded-lg cursor-pointer" data-mock="true">
+                                <!-- Portrait of a contemporary pop music artist on stage -->
+                                <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&h=200" alt="Artist photo" class="w-full aspect-square rounded-full mb-4">
+                                <h3 class="font-semibold text-center">The Weeknd</h3>
+                                <p class="text-sm text-muted-foreground text-center">Artist</p>
+                            </div>
+                            <div class="album-card bg-card p-4 rounded-lg cursor-pointer" data-mock="true">
+                                <!-- Female singer performing with microphone under stage lights -->
+                                <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&h=200" alt="Artist photo" class="w-full aspect-square rounded-full mb-4">
+                                <h3 class="font-semibold text-center">Billie Eilish</h3>
+                                <p class="text-sm text-muted-foreground text-center">Artist</p>
+                            </div>
+                            <div class="album-card bg-card p-4 rounded-lg cursor-pointer" data-mock="true">
+                                <!-- Male rapper performing on stage with crowd in background -->
+                                <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&h=200" alt="Artist photo" class="w-full aspect-square rounded-full mb-4">
+                                <h3 class="font-semibold text-center">Drake</h3>
+                                <p class="text-sm text-muted-foreground text-center">Artist</p>
+                            </div>
+                            <div class="album-card bg-card p-4 rounded-lg cursor-pointer" data-mock="true">
+                                <!-- Singer-songwriter with acoustic guitar in intimate venue -->
+                                <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&h=200" alt="Artist photo" class="w-full aspect-square rounded-full mb-4">
+                                <h3 class="font-semibold text-center">Taylor Swift</h3>
+                                <p class="text-sm text-muted-foreground text-center">Artist</p>
+                            </div>
+                            <div class="album-card bg-card p-4 rounded-lg cursor-pointer" data-mock="true">
+                                <!-- Electronic music producer with DJ equipment and neon lighting -->
+                                <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&h=200" alt="Artist photo" class="w-full aspect-square rounded-full mb-4">
+                                <h3 class="font-semibold text-center">Dua Lipa</h3>
+                                <p class="text-sm text-muted-foreground text-center">Artist</p>
+                            </div>
+                            <div class="album-card bg-card p-4 rounded-lg cursor-pointer" data-mock="true">
+                                <!-- Rock band performing with electric guitars and drums -->
+                                <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=200&h=200" alt="Artist photo" class="w-full aspect-square rounded-full mb-4">
+                                <h3 class="font-semibold text-center">Post Malone</h3>
+                                <p class="text-sm text-muted-foreground text-center">Artist</p>
+                            </div>
+                            <!-- @END_MAP )) -->
+                        </div>
+                    </section>
+                </div>
+            </main>
+        </div>
+        <!-- @END_COMPONENT: MainContent -->
+    </div>
+
+    <!-- @COMPONENT: MusicPlayer [bottom player controls] -->
+    <div class="fixed bottom-0 left-0 right-0 bg-card border-t border-border p-4">
+        <div class="flex items-center justify-between">
+            <!-- Currently Playing -->
+            <div class="flex items-center space-x-4 flex-1 min-w-0">
+                <!-- Album cover of currently playing song -->
+                <img src="https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=56&h=56" alt="Now playing album cover" class="w-14 h-14 rounded" data-bind="currentSong.albumCover" data-mock="true">
+                <div class="min-w-0">
+                    <h4 class="font-semibold truncate" data-bind="currentSong.title" data-mock="true">Blinding Lights</h4>
+                    <p class="text-sm text-muted-foreground truncate" data-bind="currentSong.artist" data-mock="true">The Weeknd</p>
+                </div>
+                <button class="text-muted-foreground hover:text-foreground ml-4" data-event="click:toggleLike" data-implementation="Should toggle song like status">
+                    <i class="far fa-heart"></i>
+                </button>
+            </div>
+
+            <!-- Player Controls -->
+            <div class="flex flex-col items-center space-y-2 flex-1 max-w-lg">
+                <div class="flex items-center space-x-4">
+                    <button class="player-button text-muted-foreground hover:text-foreground" data-event="click:shuffleToggle">
+                        <i class="fas fa-random text-sm"></i>
+                    </button>
+                    <button class="player-button text-muted-foreground hover:text-foreground" data-event="click:previousTrack" data-implementation="Should play previous song">
+                        <i class="fas fa-step-backward"></i>
+                    </button>
+                    <button class="player-button bg-primary text-primary-foreground w-8 h-8 rounded-full flex items-center justify-center hover:bg-primary/90" data-event="click:togglePlayPause" data-implementation="Should toggle play/pause state">
+                        <i class="fas fa-play text-sm" id="playPauseIcon"></i>
+                    </button>
+                    <button class="player-button text-muted-foreground hover:text-foreground" data-event="click:nextTrack" data-implementation="Should play next song">
+                        <i class="fas fa-step-forward"></i>
+                    </button>
+                    <button class="player-button text-muted-foreground hover:text-foreground" data-event="click:repeatToggle">
+                        <i class="fas fa-redo text-sm"></i>
+                    </button>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="flex items-center space-x-2 w-full">
+                    <span class="text-xs text-muted-foreground" data-bind="currentTime" data-mock="true">2:14</span>
+                    <input type="range" min="0" max="100" value="30" class="progress-bar flex-1 h-1 bg-muted rounded-full appearance-none cursor-pointer" data-implementation="Should control song progress">
+                    <span class="text-xs text-muted-foreground" data-bind="duration" data-mock="true">3:20</span>
+                </div>
+            </div>
+
+            <!-- Volume and Other Controls -->
+            <div class="flex items-center space-x-4 flex-1 justify-end">
+                <button class="text-muted-foreground hover:text-foreground hidden md:block" data-event="click:showQueue">
+                    <i class="fas fa-list text-sm"></i>
+                </button>
+                <button class="text-muted-foreground hover:text-foreground hidden md:block" data-event="click:showDevices">
+                    <i class="fas fa-desktop text-sm"></i>
+                </button>
+                <div class="flex items-center space-x-2 hidden md:flex">
+                    <button class="text-muted-foreground hover:text-foreground" data-event="click:toggleMute">
+                        <i class="fas fa-volume-up text-sm"></i>
+                    </button>
+                    <input type="range" min="0" max="100" value="70" class="progress-bar w-20 h-1 bg-muted rounded-full appearance-none cursor-pointer" data-implementation="Should control volume level">
+                </div>
+                <button class="text-muted-foreground hover:text-foreground hidden md:block" data-event="click:downloadSong" data-implementation="Should download current song">
+                    <i class="fas fa-download text-sm"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: MusicPlayer -->
+
+    <script>
+        // TODO: Implement business logic, API calls, and state management
+        (function() {
+            // Mock interactive functionality for demo purposes
+            const authModal = document.getElementById('authModal');
+            const loginButton = document.querySelector('[data-event="click:showAuth"]');
+            const closeModalButton = document.querySelector('[data-event="click:closeModal"]');
+            const playPauseButton = document.querySelector('[data-event="click:togglePlayPause"]');
+            const playPauseIcon = document.getElementById('playPauseIcon');
+            
+            let isPlaying = false;
+            
+            // Auth modal functionality
+            if (loginButton) {
+                loginButton.addEventListener('click', () => {
+                    authModal.classList.remove('hidden');
+                });
+            }
+            
+            if (closeModalButton) {
+                closeModalButton.addEventListener('click', () => {
+                    authModal.classList.add('hidden');
+                });
+            }
+            
+            // Play/pause functionality
+            if (playPauseButton) {
+                playPauseButton.addEventListener('click', () => {
+                    isPlaying = !isPlaying;
+                    playPauseIcon.className = isPlaying ? 'fas fa-pause text-sm' : 'fas fa-play text-sm';
+                });
+            }
+            
+            // Mobile sidebar toggle
+            const sidebarToggle = document.querySelector('[data-event="click:toggleSidebar"]');
+            const sidebar = document.querySelector('.sidebar');
+            
+            if (sidebarToggle && sidebar) {
+                sidebarToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('open');
+                });
+            }
+            
+            // Close modal when clicking outside
+            authModal.addEventListener('click', (e) => {
+                if (e.target === authModal) {
+                    authModal.classList.add('hidden');
+                }
+            });
+            
+            // Album card hover effects
+            const albumCards = document.querySelectorAll('.album-card');
+            albumCards.forEach(card => {
+                card.addEventListener('mouseenter', () => {
+                    card.style.transform = 'translateY(-4px)';
+                });
+                
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'translateY(0)';
+                });
+            });
+            
+            // Progress bar visual feedback
+            const progressBars = document.querySelectorAll('.progress-bar');
+            progressBars.forEach(bar => {
+                bar.addEventListener('input', (e) => {
+                    const value = e.target.value;
+                    const max = e.target.max;
+                    const percentage = (value / max) * 100;
+                    e.target.style.background = `linear-gradient(to right, hsl(141 75% 42%) 0%, hsl(141 75% 42%) ${percentage}%, hsl(0 0% 33%) ${percentage}%, hsl(0 0% 33%) 100%)`;
+                });
+            });
+        })();
+    </script>
+</body>
+</html>

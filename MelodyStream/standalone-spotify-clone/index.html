@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Clone</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Login Screen -->
+        <div id="loginScreen" class="login-screen">
+            <div class="login-container">
+                <div class="login-header">
+                    <i class="fas fa-music"></i>
+                    <h1>Spotify Clone</h1>
+                </div>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="username">Username</label>
+                        <input type="text" id="username" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Password</label>
+                        <input type="password" id="password" required>
+                    </div>
+                    <button type="submit" class="login-btn">Log In</button>
+                </form>
+                <div class="signup-link">
+                    <p>Don't have an account? <a href="#" id="showSignup">Sign up</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Signup Screen -->
+        <div id="signupScreen" class="login-screen hidden">
+            <div class="login-container">
+                <div class="login-header">
+                    <i class="fas fa-music"></i>
+                    <h1>Join Spotify Clone</h1>
+                </div>
+                <form id="signupForm">
+                    <div class="form-group">
+                        <label for="newUsername">Username</label>
+                        <input type="text" id="newUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="newPassword">Password</label>
+                        <input type="password" id="newPassword" required>
+                    </div>
+                    <button type="submit" class="login-btn">Sign Up</button>
+                </form>
+                <div class="signup-link">
+                    <p>Already have an account? <a href="#" id="showLogin">Log in</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Application -->
+        <div id="mainApp" class="main-app hidden">
+            <!-- Sidebar -->
+            <nav class="sidebar">
+                <div class="sidebar-header">
+                    <i class="fas fa-music"></i>
+                    <span>Spotify Clone</span>
+                </div>
+                
+                <ul class="nav-menu">
+                    <li class="nav-item active" data-page="home">
+                        <i class="fas fa-home"></i>
+                        <span>Home</span>
+                    </li>
+                    <li class="nav-item" data-page="search">
+                        <i class="fas fa-search"></i>
+                        <span>Search</span>
+                    </li>
+                    <li class="nav-item" data-page="library">
+                        <i class="fas fa-book"></i>
+                        <span>Your Library</span>
+                    </li>
+                </ul>
+
+                <div class="playlist-section">
+                    <div class="playlist-header">
+                        <h3>Playlists</h3>
+                        <button id="createPlaylist" class="create-btn">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <ul id="playlistList" class="playlist-list">
+                        <li class="playlist-item" data-playlist="liked">
+                            <i class="fas fa-heart"></i>
+                            <span>Liked Songs</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="user-profile">
+                    <div class="user-info">
+                        <i class="fas fa-user-circle"></i>
+                        <span id="currentUser">User</span>
+                    </div>
+                    <button id="logoutBtn" class="logout-btn">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="main-content">
+                <!-- Header -->
+                <header class="content-header">
+                    <div class="header-controls">
+                        <button class="nav-btn" id="backBtn">
+                            <i class="fas fa-chevron-left"></i>
+                        </button>
+                        <button class="nav-btn" id="forwardBtn">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </div>
+                    <div class="search-container">
+                        <input type="text" id="searchInput" placeholder="Search songs, artists, albums..." class="search-input">
+                        <i class="fas fa-search search-icon"></i>
+                    </div>
+                </header>
+
+                <!-- Page Content -->
+                <div class="page-content">
+                    <!-- Home Page -->
+                    <div id="homePage" class="page active">
+                        <div class="hero-section">
+                            <h1 id="greeting">Good evening</h1>
+                            <p>Discover your new favorite songs</p>
+                        </div>
+                        
+                        <section class="music-section">
+                            <h2>Recent Songs</h2>
+                            <div id="recentSongs" class="song-grid"></div>
+                        </section>
+                        
+                        <section class="music-section">
+                            <h2>All Songs</h2>
+                            <div id="allSongs" class="song-grid"></div>
+                        </section>
+                    </div>
+
+                    <!-- Search Page -->
+                    <div id="searchPage" class="page">
+                        <h1>Search</h1>
+                        <div id="searchResults" class="song-grid"></div>
+                        <div id="noResults" class="no-results hidden">
+                            <p>No songs found. Try searching for something else.</p>
+                        </div>
+                    </div>
+
+                    <!-- Library Page -->
+                    <div id="libraryPage" class="page">
+                        <h1>Your Library</h1>
+                        <div class="library-tabs">
+                            <button class="tab-btn active" data-tab="playlists">Playlists</button>
+                            <button class="tab-btn" data-tab="liked">Liked Songs</button>
+                        </div>
+                        <div id="playlistsTab" class="tab-content active">
+                            <div id="userPlaylists" class="playlist-grid"></div>
+                        </div>
+                        <div id="likedTab" class="tab-content">
+                            <div id="likedSongs" class="song-grid"></div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <!-- Music Player -->
+            <div class="music-player">
+                <div class="player-info">
+                    <div class="song-artwork">
+                        <i class="fas fa-music" id="currentArtwork"></i>
+                    </div>
+                    <div class="song-details">
+                        <div class="song-title" id="currentTitle">Select a song</div>
+                        <div class="song-artist" id="currentArtist"></div>
+                    </div>
+                    <button class="like-btn" id="likeBtn">
+                        <i class="far fa-heart"></i>
+                    </button>
+                </div>
+
+                <div class="player-controls">
+                    <div class="control-buttons">
+                        <button class="control-btn" id="shuffleBtn">
+                            <i class="fas fa-random"></i>
+                        </button>
+                        <button class="control-btn" id="prevBtn">
+                            <i class="fas fa-step-backward"></i>
+                        </button>
+                        <button class="play-btn" id="playBtn">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button class="control-btn" id="nextBtn">
+                            <i class="fas fa-step-forward"></i>
+                        </button>
+                        <button class="control-btn" id="repeatBtn">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                    </div>
+                    <div class="progress-container">
+                        <span class="time" id="currentTime">0:00</span>
+                        <div class="progress-bar">
+                            <input type="range" id="progressSlider" min="0" max="100" value="0">
+                        </div>
+                        <span class="time" id="duration">0:00</span>
+                    </div>
+                </div>
+
+                <div class="player-extras">
+                    <button class="extra-btn" id="downloadBtn">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <div class="volume-container">
+                        <button class="extra-btn" id="volumeBtn">
+                            <i class="fas fa-volume-up"></i>
+                        </button>
+                        <input type="range" id="volumeSlider" min="0" max="100" value="70">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="createPlaylistModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Playlist</h3>
+                <button class="close-btn" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="playlistForm">
+                <div class="form-group">
+                    <label for="playlistName">Playlist Name</label>
+                    <input type="text" id="playlistName" required>
+                </div>
+                <div class="form-group">
+                    <label for="playlistDescription">Description (Optional)</label>
+                    <textarea id="playlistDescription" rows="3"></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="cancel-btn" id="cancelPlaylist">Cancel</button>
+                    <button type="submit" class="create-btn">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Song Modal -->
+    <div id="addSongModal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Song</h3>
+                <button class="close-btn" id="closeSongModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="songForm">
+                <div class="form-group">
+                    <label for="songTitle">Song Title</label>
+                    <input type="text" id="songTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="songArtist">Artist</label>
+                    <input type="text" id="songArtist" required>
+                </div>
+                <div class="form-group">
+                    <label for="songAlbum">Album</label>
+                    <input type="text" id="songAlbum">
+                </div>
+                <div class="form-group">
+                    <label for="songFile">Audio File</label>
+                    <input type="file" id="songFile" accept="audio/*" required>
+                </div>
+                <div class="form-group">
+                    <label for="coverFile">Cover Image (Optional)</label>
+                    <input type="file" id="coverFile" accept="image/*">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="cancel-btn" id="cancelSong">Cancel</button>
+                    <button type="submit" class="create-btn">Add Song</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Audio element -->
+    <audio id="audioPlayer" preload="metadata"></audio>
+
+    <!-- Admin Panel (floating button) -->
+    <button id="adminBtn" class="admin-btn hidden">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <script src="database.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

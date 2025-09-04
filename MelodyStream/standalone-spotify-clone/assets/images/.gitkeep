@@ -1,0 +1,18 @@
+# Images Directory
+
+This directory is for storing cover art and other image assets.
+
+## Supported Formats
+- JPG/JPEG (recommended)
+- PNG
+- GIF
+- WebP
+
+## Image Guidelines
+- Album covers: 300x300px minimum
+- User avatars: 150x150px minimum
+- Keep file sizes under 2MB
+- Use descriptive filenames
+
+## Usage
+Place your image files here and reference them in your application code or upload them through the admin interface.
